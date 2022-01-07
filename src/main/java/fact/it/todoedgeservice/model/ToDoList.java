@@ -6,6 +6,11 @@ public class ToDoList {
     private String naam;
     private String categorie;
 
+    public ToDoList(String naam, String categorie) {
+        this.naam = naam;
+        this.categorie = categorie;
+    }
+
     public int getId() {
         return id;
     }

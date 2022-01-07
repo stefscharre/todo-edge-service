@@ -11,7 +11,7 @@ public class TodoItem {
         setListNaam(toDoList.getNaam());
         userItems = new ArrayList<>();
         listItems.forEach(listItem ->{
-            userItems.add(new UserItem(listItem.getUserId(),
+            userItems.add(new UserItem(listItem.getListItemCode(),listItem.getUserId(),
                     listItem.getTitel(), listItem.getBeschrijving()));
         });
         setUserItems(userItems);
@@ -19,7 +19,7 @@ public class TodoItem {
     public TodoItem(ToDoList toDoList, ListItem listItem){
         setListNaam(toDoList.getNaam());
         userItems = new ArrayList<>();
-            userItems.add(new UserItem(listItem.getUserId(),
+            userItems.add(new UserItem(listItem.getListItemCode(),listItem.getUserId(),
                     listItem.getTitel(), listItem.getBeschrijving()));
 
     }

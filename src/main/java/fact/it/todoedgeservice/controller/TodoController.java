@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@RequestMapping(method = RequestMethod.POST, consumes="application/json")
 public class TodoController {
     @Autowired
     private RestTemplate restTemplate;
@@ -28,12 +28,12 @@ public class TodoController {
     public List<TodoItem> getTodosByUserId(@PathVariable Integer userId){
         List<TodoItem> returnList = new ArrayList<>();
         ResponseEntity<List<ListItem>> responseEntityListitems =
-                restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitem/user/{userId}",
+                restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitems/user/{userId}",
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<ListItem>>() {
                         }, userId);
         List<ListItem> listItems = responseEntityListitems.getBody();
         for (ListItem listItem: listItems){
-            ToDoList toDoList = restTemplate.getForObject("http://" +todoListServiceBaseUrl + "list/naam/{naam}",
+            ToDoList toDoList = restTemplate.getForObject("http://" +todoListServiceBaseUrl + "/lists/naam/{naam}",
                     ToDoList.class, listItem.getListNaam());
             returnList.add(new TodoItem(toDoList, listItems));
 
@@ -41,12 +41,21 @@ public class TodoController {
         return returnList;
 
     }
+    @GetMapping("/todos/listitem/{listitemcode}")
+    public TodoItem getTodoByListitemcode(@PathVariable String code){
+        ListItem listItem = restTemplate.getForObject("http://" + listItemServiceBaseUrl+"/listitems/{code}",
+                ListItem.class, code);
+        ToDoList toDoList = restTemplate.getForObject("http://"+todoListServiceBaseUrl+"/naam/{naam}",
+                ToDoList.class, listItem.getListNaam());
+        return new TodoItem(toDoList, listItem);
+
+    }
     @GetMapping("/todos/list/naam/{naam}")
     public TodoItem getTodosByNaam(@PathVariable String naam) {
-        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/list/naam/{naam}",
+        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/lists/naam/{naam}",
                 ToDoList.class, naam);
         ResponseEntity<List<ListItem>> responseEntityListItem =
-                restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitem/list/naam/{naam}",
+                restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitems/list/naam/{naam}",
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<ListItem>>() {
                         }, naam);
 
@@ -56,7 +65,7 @@ public class TodoController {
     }
     @GetMapping("/todos/{userId}/list/{naam}")
     public TodoItem getTodosByUserAndNaam(@PathVariable String naam, @PathVariable int userId){
-        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/list/naam/{naam}",
+        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/lists/naam/{naam}",
                 ToDoList.class, naam);
         ResponseEntity<List<ListItem>> responseEntityListItem =
                 restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitems/user/"+userId+"/list/naam/"+naam,
@@ -71,13 +80,13 @@ public class TodoController {
     public List<TodoItem> getTodosByCategorie(@PathVariable String categorie){
         List<TodoItem> returnList = new ArrayList<>();
         ResponseEntity<List<ToDoList>> responseEntityTodoList =
-                restTemplate.exchange("http://" + todoListServiceBaseUrl + "/list/categorie/{categorie}",
+                restTemplate.exchange("http://" + todoListServiceBaseUrl + "/lists/categorie/{categorie}",
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<ToDoList>>() {
                         }, categorie);
         List<ToDoList> toDoLists = responseEntityTodoList.getBody();
         for (ToDoList toDoList: toDoLists){
             ResponseEntity<List<ListItem>> responseEntityListItem =
-                    restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitem/list/naam/{naam}",
+                    restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitems/list/naam/{naam}",
                             HttpMethod.GET, null, new ParameterizedTypeReference<List<ListItem>>() {
                             }, toDoList.getNaam());
             returnList.add(new TodoItem(toDoList, responseEntityListItem.getBody()));
@@ -90,7 +99,7 @@ public class TodoController {
     public TodoItem addTodo(@RequestParam String code,@RequestParam Integer userId,@RequestParam String titel, @RequestParam String naam,  @RequestParam String beschrijving, @RequestParam boolean status){
         ListItem listItem = restTemplate.postForObject("http://"+listItemServiceBaseUrl+"/listitems",
                 new ListItem(code,userId,titel,naam,beschrijving,status), ListItem.class);
-        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/list/naam/{naam}",
+        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/lists/naam/{naam}",
                 ToDoList.class, naam);
         return  new TodoItem(toDoList, listItem);
     }
@@ -104,13 +113,13 @@ public class TodoController {
                 restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitems",
                         HttpMethod.PUT, new HttpEntity<>(listItem), ListItem.class);
         ListItem retrievedListItem = listItemResponseEntity.getBody();
-        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/list/naam/{naam}",
+        ToDoList toDoList = restTemplate.getForObject("http://" + todoListServiceBaseUrl + "/lists/naam/{naam}",
                 ToDoList.class, naam);
         return  new TodoItem(toDoList, retrievedListItem);
     }
-    @DeleteMapping("/todos/listitem")
+    @DeleteMapping("/todos/listitem/{listitemcode}")
     public ResponseEntity deleteTodo(@PathVariable String code){
-        restTemplate.delete("http://" + listItemServiceBaseUrl + "/listitem"+code);
+        restTemplate.delete("http://" + listItemServiceBaseUrl + "/listitem/"+code);
         return ResponseEntity.ok().build();
     }
 
