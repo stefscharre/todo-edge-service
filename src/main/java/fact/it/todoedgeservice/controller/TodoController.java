@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-@RequestMapping(method = RequestMethod.POST, consumes="application/json")
+@RestController
 public class TodoController {
     @Autowired
     private RestTemplate restTemplate;
@@ -25,21 +25,9 @@ public class TodoController {
     private String todoListServiceBaseUrl;
 
     @GetMapping("/todos/user/{userId}")
-    public List<TodoItem> getTodosByUserId(@PathVariable Integer userId){
+    public List<TodoItem> getTodosByUserId(@PathVariable String userId){
         List<TodoItem> returnList = new ArrayList<>();
-        ResponseEntity<List<ListItem>> responseEntityListitems =
-                restTemplate.exchange("http://" + listItemServiceBaseUrl + "/listitems/user/{userId}",
-                        HttpMethod.GET, null, new ParameterizedTypeReference<List<ListItem>>() {
-                        }, userId);
-        List<ListItem> listItems = responseEntityListitems.getBody();
-        for (ListItem listItem: listItems){
-            ToDoList toDoList = restTemplate.getForObject("http://" +todoListServiceBaseUrl + "/lists/naam/{naam}",
-                    ToDoList.class, listItem.getListNaam());
-            returnList.add(new TodoItem(toDoList, listItems));
-
-        }
         return returnList;
-
     }
     @GetMapping("/todos/listitem/{listitemcode}")
     public TodoItem getTodoByListitemcode(@PathVariable String code){
